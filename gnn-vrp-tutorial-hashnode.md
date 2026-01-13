@@ -2,7 +2,7 @@
 title: "Solving the Vehicle Routing Problem with Graph Neural Networks: A Complete Guide"
 subtitle: "Build a GNN to optimize delivery routes for multiple vehicles using PyTorch Geometric"
 slug: solving-vehicle-routing-problem-with-graph-neural-networks
-cover_image: https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600
+cover_image: https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/cover_image.jpg
 tags: machine-learning, python, deep-learning, graph-neural-networks, logistics
 domain: israelcodes.hashnode.dev
 ---
@@ -171,7 +171,7 @@ edge_features = [
 
 Here's an example of what a VRP instance looks like with a depot and multiple customers:
 
-![VRP Instance Example](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_instance.png)
+![VRP Instance Example](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_instance.png)
 
 *Figure 1: A VRP instance showing the depot (square) and customers (circles) with their demands. The goal is to find optimal routes for multiple vehicles to serve all customers.*
 
@@ -460,7 +460,7 @@ def train_model(model, train_loader, val_loader, epochs=150, lr=0.001):
 
 Here's what the training curves look like for our VRP GNN model:
 
-![Training Curves](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_training_curves.png)
+![Training Curves](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_training_curves.png)
 
 *Figure 2: Training and validation metrics over epochs. Notice how the model learns to predict route edges despite the severe class imbalance (~7% positive edges).*
 
@@ -537,7 +537,7 @@ def check_capacity(routes, demands, capacity):
 
 Let's examine the confusion matrix to understand how well our model performs on the imbalanced VRP dataset:
 
-![Confusion Matrix](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_confusion_matrix.png)
+![Confusion Matrix](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_confusion_matrix.png)
 
 *Figure 3: Confusion matrix showing the model's edge classification performance. Despite the class imbalance, the model correctly identifies most route edges.*
 
@@ -545,7 +545,7 @@ Let's examine the confusion matrix to understand how well our model performs on 
 
 The following visualization shows how our predicted routes compare to optimal solutions:
 
-![Route Quality Analysis](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_route_quality.png)
+![Route Quality Analysis](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_route_quality.png)
 
 *Figure 4: Comparison of predicted route distances vs. optimal route distances. Our GNN model produces routes that are reasonably close to optimal solutions.*
 
@@ -553,7 +553,7 @@ The following visualization shows how our predicted routes compare to optimal so
 
 The model also provides probability scores for each edge. Here's a visualization of the probability distribution:
 
-![Probability Analysis](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_probability_analysis.png)
+![Probability Analysis](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_probability_analysis.png)
 
 *Figure 5: Probability heatmap showing which edges the model believes are most likely to be in optimal routes. Darker colors indicate higher confidence.*
 
@@ -628,11 +628,11 @@ plt.savefig('vrp_comparison.png')
 
 Here's an example of our model's predictions on a sample VRP instance:
 
-![Sample VRP Instance](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_sample_instance.png)
+![Sample VRP Instance](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_sample_instance.png)
 
 *Figure 6: A sample VRP instance showing the depot and customer locations with their demands.*
 
-![Sample VRP Predictions](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_sample_predictions.png)
+![Sample VRP Predictions](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_sample_predictions.png)
 
 *Figure 7: Side-by-side comparison of optimal routes (left) and predicted routes (right) for a VRP instance with multiple vehicles.*
 
@@ -640,7 +640,7 @@ Here's an example of our model's predictions on a sample VRP instance:
 
 Here's a complete visualization of predicted routes from our trained model:
 
-![Predicted Routes](https://raw.githubusercontent.com/Aloagbaye/hashode-publications/main/vrp_images/vrp_predicted_routes.png)
+![Predicted Routes](https://raw.githubusercontent.com/Aloagbaye/hashnode-publications/main/vrp_images/vrp_predicted_routes.png)
 
 *Figure 8: Complete routes constructed from the model's edge predictions. Each color represents a different vehicle route, all starting and ending at the depot.*
 

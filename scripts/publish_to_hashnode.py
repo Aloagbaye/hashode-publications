@@ -254,9 +254,14 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
         print(f"Error: Missing required fields (title or slug)")
         return False
     
-    # Check if post already exists
+    # Check if post already exists - CRITICAL: Always check first to prevent duplicates
     existing_post_id = get_existing_post_id(slug, domain)
     is_update = existing_post_id is not None
+    
+    if is_update:
+        print(f"   🔄 Post with slug '{slug}' already exists - will UPDATE existing post (ID: {existing_post_id})")
+    else:
+        print(f"   ✨ Post with slug '{slug}' is new - will CREATE new post")
     
     # Parse tags (can be comma-separated string or list)
     if isinstance(tags, str):
@@ -329,10 +334,21 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
     if "subtitle" in frontmatter and frontmatter["subtitle"]:
         input_data["subtitle"] = str(frontmatter["subtitle"]).strip('"').strip("'")
     
+    # Handle cover image - different field names for different mutations
+    cover_image_url = None
     if "cover" in frontmatter and frontmatter["cover"]:
-        input_data["coverImageURL"] = str(frontmatter["cover"]).strip()
+        cover_image_url = str(frontmatter["cover"]).strip()
     elif "cover_image" in frontmatter and frontmatter["cover_image"]:
-        input_data["coverImageURL"] = str(frontmatter["cover_image"]).strip()
+        cover_image_url = str(frontmatter["cover_image"]).strip()
+    
+    if cover_image_url:
+        if is_update:
+            # UpdatePostInput uses coverImageURL
+            input_data["coverImageURL"] = cover_image_url
+        else:
+            # PublishPostInput - try coverImage (simple string field)
+            # Note: If this still fails, cover images may only be supported in updates
+            input_data["coverImage"] = cover_image_url
     
     # Note: publishPost mutation publishes posts by default
     # To save as draft, we would need to use a different mutation (not implemented yet)
@@ -376,19 +392,16 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
         if response.status_code == 200:
             data = response.json()
             if "errors" in data:
-                # If updatePost fails and post exists, try publishPost as fallback
-                # (publishPost should update existing posts with same slug)
+                error_msg = json.dumps(data['errors'], indent=2)
                 if is_update:
-                    error_msg = json.dumps(data['errors'], indent=2)
-                    if "updatePost" in error_msg or "UpdatePost" in error_msg:
-                        print(f"   ⚠️  updatePost mutation failed, trying publishPost (which updates existing posts)...")
-                        # Fallback to publishPost - it should update if slug exists
-                        return _try_publish_post(input_data, publication_id, title, slug)
-                    else:
-                        print(f"GraphQL Errors: {error_msg}")
-                        return False
+                    # For updates, we should NOT fall back to publishPost as it creates duplicates
+                    # Instead, report the error clearly
+                    print(f"❌ GraphQL Errors when updating post: {error_msg}")
+                    print(f"   ⚠️  Failed to update existing post. Please check the error above.")
+                    print(f"   ⚠️  The post was NOT republished as a new article to prevent duplicates.")
+                    return False
                 else:
-                    print(f"GraphQL Errors: {json.dumps(data['errors'], indent=2)}")
+                    print(f"❌ GraphQL Errors when publishing new post: {error_msg}")
                     return False
             
             # Handle response based on mutation type
@@ -435,8 +448,8 @@ def _try_publish_post(input_data: Dict, publication_id: str, title: str, slug: s
         "contentMarkdown": input_data.get("contentMarkdown", "")
     }
     
-    # Copy other fields
-    for key in ["tags", "subtitle", "coverImageURL", "hideFromHashnodeCommunity", 
+    # Copy other fields (excluding coverImageURL which is not valid for PublishPostInput)
+    for key in ["tags", "subtitle", "coverImage", "hideFromHashnodeCommunity", 
                 "originalArticleURL", "seoTitle", "seoDescription", "disableComments",
                 "seriesSlug", "enableTableOfContents"]:
         if key in input_data:
