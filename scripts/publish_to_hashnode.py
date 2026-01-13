@@ -334,21 +334,19 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
     if "subtitle" in frontmatter and frontmatter["subtitle"]:
         input_data["subtitle"] = str(frontmatter["subtitle"]).strip('"').strip("'")
     
-    # Handle cover image - different field names for different mutations
+    # Handle cover image - PublishPostInput doesn't support cover images
+    # For new posts, we'll publish first, then update with cover image
+    # For updates, we can set it directly
     cover_image_url = None
     if "cover" in frontmatter and frontmatter["cover"]:
         cover_image_url = str(frontmatter["cover"]).strip()
     elif "cover_image" in frontmatter and frontmatter["cover_image"]:
         cover_image_url = str(frontmatter["cover_image"]).strip()
     
-    if cover_image_url:
-        if is_update:
-            # UpdatePostInput uses coverImageURL
-            input_data["coverImageURL"] = cover_image_url
-        else:
-            # PublishPostInput - try coverImage (simple string field)
-            # Note: If this still fails, cover images may only be supported in updates
-            input_data["coverImage"] = cover_image_url
+    if cover_image_url and is_update:
+        # UpdatePostInput supports coverImageURL
+        input_data["coverImageURL"] = cover_image_url
+    # For new posts, we'll handle cover image after publishing (see below)
     
     # Note: publishPost mutation publishes posts by default
     # To save as draft, we would need to use a different mutation (not implemented yet)
@@ -415,11 +413,21 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
                 post = result.get("post")
                 
                 if post:
+                    post_id = post.get("id")
                     print(f"✅ Successfully {action}: {post.get('title', title)}")
                     if post.get("url"):
                         print(f"   URL: {post['url']}")
                     elif post.get("slug"):
                         print(f"   Slug: {post['slug']}")
+                    
+                    # For new posts, if there's a cover image, update the post with it
+                    # (PublishPostInput doesn't support cover images)
+                    if not is_update and cover_image_url and post_id:
+                        print(f"   🖼️  Adding cover image to newly published post...")
+                        update_success = _update_post_cover_image(post_id, cover_image_url, title)
+                        if not update_success:
+                            print(f"   ⚠️  Warning: Post was published but cover image could not be set")
+                    
                     return True
                 else:
                     print(f"❌ {action.capitalize()} failed: No post returned in response")
@@ -432,6 +440,56 @@ def publish_post(frontmatter: Dict, content: str, domain: str) -> bool:
             
     except requests.exceptions.RequestException as e:
         print(f"Error making API request: {e}")
+        return False
+
+
+def _update_post_cover_image(post_id: str, cover_image_url: str, title: str) -> bool:
+    """
+    Update a post's cover image using updatePost mutation.
+    This is used after publishing a new post since PublishPostInput doesn't support cover images.
+    """
+    mutation = """
+    mutation UpdatePost($input: UpdatePostInput!) {
+      updatePost(input: $input) {
+        post {
+          id
+          slug
+          url
+          title
+        }
+      }
+    }
+    """
+    
+    input_data = {
+        "postId": post_id,
+        "coverImageURL": cover_image_url
+    }
+    
+    try:
+        response = requests.post(
+            HASHNODE_API_URL,
+            json={"query": mutation, "variables": {"input": input_data}},
+            headers=get_auth_headers(),
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "errors" in data:
+                print(f"   ⚠️  Error updating cover image: {json.dumps(data['errors'], indent=2)}")
+                return False
+            
+            if "data" in data and data["data"] and data["data"].get("updatePost"):
+                result = data["data"]["updatePost"]
+                post = result.get("post")
+                if post:
+                    print(f"   ✅ Cover image added successfully")
+                    return True
+        
+        return False
+    except Exception as e:
+        print(f"   ⚠️  Error updating cover image: {e}")
         return False
 
 
@@ -448,8 +506,8 @@ def _try_publish_post(input_data: Dict, publication_id: str, title: str, slug: s
         "contentMarkdown": input_data.get("contentMarkdown", "")
     }
     
-    # Copy other fields (excluding coverImageURL which is not valid for PublishPostInput)
-    for key in ["tags", "subtitle", "coverImage", "hideFromHashnodeCommunity", 
+    # Copy other fields (excluding coverImageURL/coverImage which are not valid for PublishPostInput)
+    for key in ["tags", "subtitle", "hideFromHashnodeCommunity", 
                 "originalArticleURL", "seoTitle", "seoDescription", "disableComments",
                 "seriesSlug", "enableTableOfContents"]:
         if key in input_data:
