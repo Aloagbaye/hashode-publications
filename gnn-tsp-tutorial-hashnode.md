@@ -1,10 +1,10 @@
 ---
 title: "Solving the Traveling Salesman Problem with Graph Neural Networks: A Complete Python Tutorial"
 subtitle: "Learn how to apply GNNs to classic optimization problems with PyTorch Geometric"
-slug: post-from-github-as-source
+slug: solving-traveling-salesman-problem
 cover_image: https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1600
 tags: machine-learning, python, deep-learning, graph-neural-networks, optimization, pytorch, artificial-intelligence, tutorial
-canonical_url: 
+domain: israelcodes.hashnode.dev
 ---
 
 # Solving the Traveling Salesman Problem with Graph Neural Networks: A Complete Python Tutorial
