@@ -1,5 +1,5 @@
 ---
-title: Building a Full ML Platform on GCP: The Complete Reference Architecture
+title: "Building a Full ML Platform on GCP: The Complete Reference Architecture"
 subtitle: "The definitive guide to designing and automating a production-grade ML platform on Google Cloud"
 slug: building-full-ml-platform-on-gcp
 cover_image: 
